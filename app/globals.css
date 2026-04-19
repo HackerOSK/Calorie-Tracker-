@@ -1,26 +1,263 @@
 @import "tailwindcss";
 
+/* ─── Forest Theme (Health-focused Green) ─────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f9f5;
+  --foreground: #1a2e1a;
+  --card: #f0f4ec;
+  --card-foreground: #1a2e1a;
+  --popover: #f0f4ec;
+  --popover-foreground: #1a2e1a;
+  --primary: #22a55b;
+  --primary-light: #34d572;
+  --primary-dark: #16804a;
+  --primary-foreground: #ffffff;
+  --secondary: #e2e8da;
+  --secondary-foreground: #2d4a2d;
+  --muted: #e8ede3;
+  --muted-foreground: #6b7f6b;
+  --accent: #d4edda;
+  --accent-foreground: #1a5c30;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #cdd8c5;
+  --input: #cdd8c5;
+  --ring: #22a55b;
+  --radius: 0.75rem;
+  --chart-calories: #22a55b;
+  --chart-protein: #3b82f6;
+  --chart-carbs: #f59e0b;
+  --chart-fats: #ef4444;
+  --chart-fiber: #8b5cf6;
+  --gradient-start: #22a55b;
+  --gradient-end: #14b8a6;
+  --glow: rgba(34, 165, 91, 0.15);
+
+  --font-geist-sans: "Geist", system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", monospace;
 }
 
+.dark {
+  --background: #0c1a0c;
+  --foreground: #e8f0e8;
+  --card: #142014;
+  --card-foreground: #e8f0e8;
+  --popover: #142014;
+  --popover-foreground: #e8f0e8;
+  --primary: #34d572;
+  --primary-light: #4ae88a;
+  --primary-dark: #22a55b;
+  --primary-foreground: #0c1a0c;
+  --secondary: #1e2e1e;
+  --secondary-foreground: #b8d0b8;
+  --muted: #1a281a;
+  --muted-foreground: #7fa87f;
+  --accent: #1e3a1e;
+  --accent-foreground: #6fcf8a;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #2a3f2a;
+  --input: #2a3f2a;
+  --ring: #34d572;
+  --chart-calories: #34d572;
+  --chart-protein: #60a5fa;
+  --chart-carbs: #fbbf24;
+  --chart-fats: #f87171;
+  --chart-fiber: #a78bfa;
+  --gradient-start: #34d572;
+  --gradient-end: #2dd4bf;
+  --glow: rgba(52, 213, 114, 0.1);
+}
+
+/* ─── Theme Tokens ────────────────────────────────────────────────────────── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-calories: var(--chart-calories);
+  --color-chart-protein: var(--chart-protein);
+  --color-chart-carbs: var(--chart-carbs);
+  --color-chart-fats: var(--chart-fats);
+  --color-chart-fiber: var(--chart-fiber);
+
+  --color-gradient-start: var(--gradient-start);
+  --color-gradient-end: var(--gradient-end);
+  --color-glow: var(--glow);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* ─── Macro Color Classes ─────────────────────────────────────────────────── */
+.macro-calories { color: var(--chart-calories); }
+.macro-protein { color: var(--chart-protein); }
+.macro-carbs { color: var(--chart-carbs); }
+.macro-fats { color: var(--chart-fats); }
+.macro-fiber { color: var(--chart-fiber); }
+
+.macro-bg-calories { background-color: var(--chart-calories); }
+.macro-bg-protein { background-color: var(--chart-protein); }
+.macro-bg-carbs { background-color: var(--chart-carbs); }
+.macro-bg-fats { background-color: var(--chart-fats); }
+.macro-bg-fiber { background-color: var(--chart-fiber); }
+
+/* ─── Glass Card Effect ───────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-card {
+  background: rgba(20, 32, 20, 0.7);
+  border: 1px solid rgba(52, 213, 114, 0.1);
+}
+
+/* ─── Gradient Text ───────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glow Effects ────────────────────────────────────────────────────────── */
+.glow-ring {
+  box-shadow: 0 0 20px var(--glow), 0 0 60px var(--glow);
+}
+
+.glow-card:hover {
+  box-shadow: 0 4px 20px var(--glow), 0 0 40px var(--glow);
+}
+
+/* ─── Pulse Animation ─────────────────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px var(--glow); }
+  50% { box-shadow: 0 0 25px var(--glow), 0 0 50px var(--glow); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ─── Circular Progress Ring ──────────────────────────────────────────────── */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* ─── Upload Zone ─────────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  transition: all 0.3s ease;
+}
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--primary);
+  background: var(--glow);
+}
+
+/* ─── Fade-In Animation ───────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* ─── Stagger Children ───────────────────────────────────────────────────── */
+.stagger-children > * {
+  opacity: 0;
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ─── Shimmer Loader ──────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--card) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ─── Bottom Nav Safe Area ────────────────────────────────────────────────── */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 80px);
+}
+
+/* ─── Meal type indicator dots ────────────────────────────────────────────── */
+.meal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
 }
