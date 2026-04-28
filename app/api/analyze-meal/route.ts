@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File;
+    const description = (formData.get("description") as string) || "";
 
     if (!file) {
       return NextResponse.json(
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
 
     // Analyze with Gemini
-    const result = await analyzeMealImage(base64, file.type);
+    const result = await analyzeMealImage(base64, file.type, description);
 
     return NextResponse.json(result);
   } catch (error) {

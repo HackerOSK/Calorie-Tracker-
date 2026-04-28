@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Upload, X, Loader2, Check, ArrowLeft, Pencil } from "lucide-react";
+import { Camera, Upload, X, Loader2, Check, ArrowLeft, Pencil, Plus, Trash2, MessageSquare } from "lucide-react";
 import { cn, getToday } from "@/lib/utils";
 import { apiAddMeal } from "@/lib/api-client";
 import type { MealType } from "@/types/meal";
@@ -43,6 +43,17 @@ export default function ScanPage() {
     getDefaultMealType()
   );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [showCustomForm, setShowCustomForm] = useState(false);
+  const [mealHint, setMealHint] = useState("");
+  const [customItem, setCustomItem] = useState({
+    name: "",
+    quantity: "",
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+    fiber: 0,
+  });
 
   const handleFile = useCallback((file: File) => {
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
@@ -83,6 +94,9 @@ export default function ScanPage() {
     try {
       const formData = new FormData();
       formData.append("image", selectedFile);
+      if (mealHint.trim()) {
+        formData.append("description", mealHint.trim());
+      }
 
       const response = await fetch("/api/analyze-meal", {
         method: "POST",
@@ -150,18 +164,40 @@ export default function ScanPage() {
     setError(null);
   };
 
+  const recalcTotals = (items: AnalysisResult["foodItems"]): Partial<AnalysisResult> => ({
+    totalCalories: items.reduce((s, i) => s + i.calories, 0),
+    totalProtein: items.reduce((s, i) => s + i.protein, 0),
+    totalCarbs: items.reduce((s, i) => s + i.carbs, 0),
+    totalFats: items.reduce((s, i) => s + i.fats, 0),
+    totalFiber: items.reduce((s, i) => s + i.fiber, 0),
+  });
+
   const updateFoodItem = (index: number, field: string, value: number) => {
     if (!result) return;
     const updated = { ...result };
     const item = { ...updated.foodItems[index], [field]: value };
     updated.foodItems[index] = item;
-    // Recalculate totals
-    updated.totalCalories = updated.foodItems.reduce((s, i) => s + i.calories, 0);
-    updated.totalProtein = updated.foodItems.reduce((s, i) => s + i.protein, 0);
-    updated.totalCarbs = updated.foodItems.reduce((s, i) => s + i.carbs, 0);
-    updated.totalFats = updated.foodItems.reduce((s, i) => s + i.fats, 0);
-    updated.totalFiber = updated.foodItems.reduce((s, i) => s + i.fiber, 0);
+    Object.assign(updated, recalcTotals(updated.foodItems));
     setResult(updated);
+  };
+
+  const removeFoodItem = (index: number) => {
+    if (!result) return;
+    const updated = { ...result };
+    updated.foodItems = updated.foodItems.filter((_, i) => i !== index);
+    Object.assign(updated, recalcTotals(updated.foodItems));
+    setResult(updated);
+    if (editingIndex === index) setEditingIndex(null);
+  };
+
+  const addCustomFoodItem = () => {
+    if (!result || !customItem.name.trim()) return;
+    const updated = { ...result };
+    updated.foodItems = [...updated.foodItems, { ...customItem }];
+    Object.assign(updated, recalcTotals(updated.foodItems));
+    setResult(updated);
+    setCustomItem({ name: "", quantity: "", calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
+    setShowCustomForm(false);
   };
 
   return (
@@ -255,12 +291,35 @@ export default function ScanPage() {
           )}
 
           {selectedImage && (
-            <button
-              onClick={handleAnalyze}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-light text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
-            >
-              ✨ Analyze with AI
-            </button>
+            <>
+              {/* Meal description hint */}
+              <div className="glass-card rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <label className="text-sm font-semibold text-foreground">
+                    Describe your meal
+                    <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+                  </label>
+                </div>
+                <textarea
+                  value={mealHint}
+                  onChange={(e) => setMealHint(e.target.value)}
+                  placeholder="e.g. 2 chapati with dal fry, a bowl of rice, and buttermilk..."
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  💡 Adding details like item names, portions, or cooking method helps the AI give more accurate results
+                </p>
+              </div>
+
+              <button
+                onClick={handleAnalyze}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-primary-light text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+              >
+                ✨ Analyze with AI
+              </button>
+            </>
           )}
         </div>
       )}
@@ -318,9 +377,12 @@ export default function ScanPage() {
 
           {/* Food Items */}
           <div className="glass-card rounded-2xl p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-3">
-              Detected Items
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground">
+                Detected Items
+              </h3>
+              <span className="text-xs text-muted-foreground">{result.foodItems.length} items</span>
+            </div>
             <div className="space-y-3">
               {result.foodItems.map((item, i) => (
                 <div
@@ -336,15 +398,24 @@ export default function ScanPage() {
                         {item.quantity}
                       </span>
                     </div>
-                    <button
-                      onClick={() =>
-                        setEditingIndex(editingIndex === i ? null : i)
-                      }
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      aria-label="Edit item"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() =>
+                          setEditingIndex(editingIndex === i ? null : i)
+                        }
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        aria-label="Edit item"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => removeFoodItem(i)}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Remove item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {editingIndex === i ? (
@@ -391,6 +462,77 @@ export default function ScanPage() {
                 </div>
               ))}
             </div>
+
+            {/* Add Custom Item */}
+            {!showCustomForm ? (
+              <button
+                onClick={() => setShowCustomForm(true)}
+                className="w-full mt-4 py-3 rounded-xl border-2 border-dashed border-primary/30 text-primary text-sm font-medium flex items-center justify-center gap-2 hover:bg-primary/5 hover:border-primary/50 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Custom Item
+              </button>
+            ) : (
+              <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3 animate-fade-in-up">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-primary" />
+                    Custom Food Item
+                  </h4>
+                  <button
+                    onClick={() => setShowCustomForm(false)}
+                    className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground uppercase block mb-1">Name *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Chapati"
+                      value={customItem.name}
+                      onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground uppercase block mb-1">Quantity</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2 pieces"
+                      value={customItem.quantity}
+                      onChange={(e) => setCustomItem({ ...customItem, quantity: e.target.value })}
+                      className="w-full px-3 py-2 text-sm rounded-lg bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {(["calories", "protein", "carbs", "fats", "fiber"] as const).map((field) => (
+                    <div key={field}>
+                      <label className="text-[10px] text-muted-foreground uppercase block mb-1">{field}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={customItem[field] || ""}
+                        onChange={(e) => setCustomItem({ ...customItem, [field]: Number(e.target.value) || 0 })}
+                        placeholder="0"
+                        className="w-full px-2 py-1.5 text-xs rounded-lg bg-card border border-border text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={addCustomFoodItem}
+                  disabled={!customItem.name.trim()}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-light text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  ✓ Add Item
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Meal Type Selector */}

@@ -4,7 +4,8 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 
 export async function analyzeMealImage(
   base64Image: string,
-  mimeType: string
+  mimeType: string,
+  userDescription?: string
 ): Promise<{
   foodItems: Array<{
     name: string;
@@ -29,7 +30,11 @@ export async function analyzeMealImage(
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-  const prompt = `You are a professional nutritionist AI. Analyze the food in this image and provide detailed nutritional estimates.
+  const userHint = userDescription
+    ? `\n\nThe user has described this meal as: "${userDescription}". Use this description along with the image to identify food items more accurately and estimate portions.`
+    : "";
+
+  const prompt = `You are a professional nutritionist AI. Analyze the food in this image and provide detailed nutritional estimates.${userHint}
 
 IMPORTANT: Respond ONLY with a valid JSON object (no markdown, no code fences, no extra text).
 

@@ -64,6 +64,46 @@ export async function POST(request: NextRequest) {
   );
 }
 
+export async function PUT(request: NextRequest) {
+  const userId = await getAuthUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  await connectToDatabase();
+
+  const body = await request.json();
+  const { id, ...updateData } = body;
+
+  if (!id) {
+    return NextResponse.json({ error: "Meal ID required" }, { status: 400 });
+  }
+
+  // Ensure user can only update their own meals
+  const meal = await MealModel.findOneAndUpdate(
+    { _id: id, userId },
+    { $set: updateData },
+    { new: true, lean: true }
+  );
+
+  if (!meal) {
+    return NextResponse.json({ error: "Meal not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    meal: {
+      id: meal._id.toString(),
+      type: meal.type,
+      foodItems: meal.foodItems,
+      totalNutrition: meal.totalNutrition,
+      imageUrl: meal.imageUrl,
+      notes: meal.notes,
+      timestamp: meal.timestamp,
+      date: meal.date,
+    },
+  });
+}
+
 export async function DELETE(request: NextRequest) {
   const userId = await getAuthUserId();
   if (!userId) {

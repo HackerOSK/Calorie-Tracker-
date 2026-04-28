@@ -21,6 +21,11 @@ async function apiRequest<T>(
       ...options,
     });
 
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return { error: `Unexpected response (${res.status}). Server returned non-JSON.` };
+    }
+
     const json = await res.json();
 
     if (!res.ok) {
@@ -113,6 +118,19 @@ export async function apiAddMeal(meal: MealPayload) {
 
 export async function apiDeleteMeal(id: string) {
   return apiRequest(`/api/meals?id=${id}`, { method: "DELETE" });
+}
+
+export async function apiUpdateMeal(id: string, meal: Partial<MealPayload>) {
+  return apiRequest<{ meal: MealPayload }>("/api/meals", {
+    method: "PUT",
+    body: JSON.stringify({ id, ...meal }),
+  });
+}
+
+export async function apiGetDayMeals(date: string) {
+  return apiRequest<{ meals: (MealPayload & { id: string })[] }>(
+    `/api/meals?date=${date}`
+  );
 }
 
 // ─── Goals ───────────────────────────────────────────────────────────────────
